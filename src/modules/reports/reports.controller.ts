@@ -22,4 +22,19 @@ export class ReportsController {
       Number(month),
     );
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'super_admin')
+  @Get('monthly-duration/:userId')
+  async monthlyDuration(
+    @Param('userId') userId: string,
+    @Query('year') year: string,
+    @Query('month') month: string,
+  ) {
+    return this.reportsService.getMonthlyDuration(
+      userId,
+      Number(year),
+      Number(month),
+    );
+  }
 }
