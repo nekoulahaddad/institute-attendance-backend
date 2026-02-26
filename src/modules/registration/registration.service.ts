@@ -41,7 +41,7 @@ export class RegistrationService {
 
     return {
       message: 'Registration submitted',
-      userId: user._id,
+      user: user,
     };
   }
 
@@ -52,7 +52,7 @@ export class RegistrationService {
     // const previousData = user.toObject();
 
     Object.assign(user, dto);
-    await user.save();
+    const updatedUser = await user.save();
 
     const latestVersion = await this.versionModel
       .findOne({ userId })
@@ -76,7 +76,7 @@ export class RegistrationService {
       performedBy: userId,
     });
 
-    return { message: 'Updated successfully' };
+    return { user: updatedUser, message: 'Updated successfully' };
   }
 
   async approveUser(adminId: string, userId: string) {

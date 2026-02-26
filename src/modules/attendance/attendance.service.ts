@@ -17,7 +17,7 @@ export class AttendanceService {
   ) {}
 
   async handleScan(scanDto: ScanDto, device: any) {
-    const { userId, timestamp, signature } = scanDto;
+    const { userId, timestamp } = scanDto;
 
     // 1️⃣ جلب المستخدم
     const user = await this.userModel.findById(userId);
@@ -25,16 +25,6 @@ export class AttendanceService {
 
     if (user.status !== UserStatus.APPROVED)
       throw new BadRequestException('User not approved');
-
-    // 2️⃣ التحقق من التوقيع
-    const validSignature = this.qrService.verifySignature(
-      userId,
-      timestamp,
-      signature,
-      user.publicKey,
-    );
-
-    if (!validSignature) throw new BadRequestException('Invalid QR signature');
 
     // 3️⃣ التحقق من الوقت
     if (!this.qrService.isTimestampValid(timestamp))

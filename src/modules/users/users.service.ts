@@ -24,7 +24,7 @@ export class UsersService {
     return user;
   }
 
-  async findByPhone(phone: string) {
+  async findByPhone({ phone }: { phone: string }) {
     return this.userModel.findOne({ phone });
   }
 

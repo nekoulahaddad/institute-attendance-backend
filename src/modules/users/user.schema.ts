@@ -43,9 +43,6 @@ export class User {
   @Prop({ type: Types.ObjectId, ref: 'Branch', required: true })
   branchId: Types.ObjectId;
 
-  @Prop({ required: true })
-  publicKey: string; // base64 encoded
-
   @Prop()
   profileImageUrl: string;
 

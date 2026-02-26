@@ -22,7 +22,4 @@ export class CreateRegistrationDto {
 
   @IsString()
   branchId: string;
-
-  @IsString()
-  publicKey: string;
 }
