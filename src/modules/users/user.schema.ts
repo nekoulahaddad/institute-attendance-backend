@@ -25,8 +25,14 @@ export class User {
   @Prop({ required: true })
   englishName: string;
 
-  @Prop()
+  @Prop({ required: true, unique: true })
   phone: string;
+
+  @Prop()
+  verificationCodeHash?: string;
+
+  @Prop()
+  verificationCodeExpiresAt?: Date;
 
   @Prop({ required: true, enum: UserRole })
   role: UserRole;

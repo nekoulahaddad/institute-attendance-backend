@@ -5,6 +5,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
 import { User, UserSchema } from '../users/user.schema';
 import { Module } from '@nestjs/common';
+import { WhatsAppService } from './whatsapp.service';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { Module } from '@nestjs/common';
     }),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, WhatsAppService],
   exports: [AuthService],
   controllers: [AuthController],
 })
