@@ -20,7 +20,7 @@ export class NewsService {
   }
 
   async deleteById(id: string) {
-    const deleted = await this.newsModel.findOneAndDelete({ id }).lean();
+    const deleted = await this.newsModel.findByIdAndDelete(id).lean();
     if (!deleted) {
       throw new NotFoundException('News item not found');
     }

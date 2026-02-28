@@ -3,6 +3,7 @@ import { Document } from 'mongoose';
 
 export type NewsDocument = News & Document;
 
+@Schema({ _id: false })
 export class LocalizedText {
   @Prop({ required: true })
   en: string;
