@@ -7,6 +7,8 @@ import { UsersModule } from './modules/users/users.module';
 import { RegistrationModule } from './modules/registration/registration.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { NewsModule } from './modules/news/news.module';
+import { BranchesModule } from './modules/branches/branches.module';
+import { LanguagesModule } from './modules/languages/languages.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { NewsModule } from './modules/news/news.module';
     AttendanceModule,
     ReportsModule,
     NewsModule,
+    BranchesModule,
+    LanguagesModule,
   ],
 })
 export class AppModule {}
