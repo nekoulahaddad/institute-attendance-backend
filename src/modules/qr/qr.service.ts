@@ -19,7 +19,6 @@ export class QrService {
   isTimestampValid(timestamp: number): boolean {
     const now = Date.now();
     const diff = Math.abs(now - timestamp);
-
-    return diff <= 15000;
+    return diff <= 120000;
   }
 }
