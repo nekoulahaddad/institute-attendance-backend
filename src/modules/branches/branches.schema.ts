@@ -5,6 +5,9 @@ export class Branch {
   @Prop({ required: true })
   name: string;
 
+  @Prop({ required: true })
+  code: string;
+
   @Prop()
   address: string;
 

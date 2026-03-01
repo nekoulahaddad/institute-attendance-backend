@@ -17,6 +17,17 @@ export enum UserStatus {
   CANCELED = 'canceled',
 }
 
+@Schema({ _id: false })
+export class UserLanguage {
+  @Prop({ required: true })
+  language: string;
+
+  @Prop({ required: true })
+  level: string;
+}
+
+export const UserLanguageSchema = SchemaFactory.createForClass(UserLanguage);
+
 @Schema({ timestamps: true })
 export class User {
   @Prop({ required: true })
@@ -40,11 +51,8 @@ export class User {
   @Prop({ required: true, enum: UserStatus, default: UserStatus.PENDING })
   status: UserStatus;
 
-  @Prop({ required: true })
-  language: string;
-
-  @Prop({ required: true })
-  level: string;
+  @Prop({ type: [UserLanguageSchema], default: [] })
+  languages: UserLanguage[];
 
   @Prop({ type: Types.ObjectId, ref: 'Branch', required: true })
   branchId: Types.ObjectId;

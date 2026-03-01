@@ -1,5 +1,14 @@
-import { IsString, IsEnum } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsEnum, IsString, ValidateNested } from 'class-validator';
 import { UserRole } from '../users/user.schema';
+
+class UserLanguageDto {
+  @IsString()
+  language: string;
+
+  @IsString()
+  level: string;
+}
 
 export class CreateRegistrationDto {
   @IsString()
@@ -14,11 +23,10 @@ export class CreateRegistrationDto {
   @IsEnum(UserRole)
   role: UserRole;
 
-  @IsString()
-  language: string;
-
-  @IsString()
-  level: string;
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UserLanguageDto)
+  languages: UserLanguageDto[];
 
   @IsString()
   branchId: string;
