@@ -5,8 +5,5 @@ export class ScanDto {
   userId: string;
 
   @IsNumber()
-  timestamp: number;
-
-  @IsString()
-  signature: string;
+  ts: number;
 }

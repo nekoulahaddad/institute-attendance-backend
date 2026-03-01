@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { AttendanceEvent, AttendanceType } from './attendance.schema';
-import { User, UserStatus } from 'src/modules/users/user.schema';
 import { Model } from 'mongoose';
 import { QrService } from 'src/modules/qr/qr.service';
 import { ScanDto } from 'src/modules/devices/scan.dto';
+import { User, UserStatus } from 'src/modules/users/user.schema';
+import { AttendanceEvent, AttendanceType } from './attendance.schema';
 
 @Injectable()
 export class AttendanceService {
@@ -16,21 +16,24 @@ export class AttendanceService {
     private qrService: QrService,
   ) {}
 
-  async handleScan(scanDto: ScanDto, device: any) {
-    const { userId, timestamp } = scanDto;
-
-    // 1️⃣ جلب المستخدم
+  async handleScan(scanDto: ScanDto, branchId: string) {
+    const { userId, ts } = scanDto;
+    console.log(
+      `Handling scan for user ${userId} at branch ${branchId} with timestamp ${ts}`,
+    );
     const user = await this.userModel.findById(userId);
-    if (!user) throw new BadRequestException('User not found');
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
 
-    if (user.status !== UserStatus.APPROVED)
+    if (user.status !== UserStatus.APPROVED) {
       throw new BadRequestException('User not approved');
+    }
 
-    // 3️⃣ التحقق من الوقت
-    if (!this.qrService.isTimestampValid(timestamp))
+    if (!this.qrService.isTimestampValid(ts)) {
       throw new BadRequestException('QR expired');
+    }
 
-    // 4️⃣ منع double scan خلال 5 ثواني
     const lastEvent = await this.attendanceModel
       .findOne({ userId })
       .sort({ scannedAt: -1 });
@@ -44,25 +47,18 @@ export class AttendanceService {
       }
     }
 
-    // 5️⃣ تحديد IN أو OUT
-    let type: AttendanceType;
+    const type =
+      !lastEvent || lastEvent.type === AttendanceType.OUT
+        ? AttendanceType.IN
+        : AttendanceType.OUT;
 
-    if (!lastEvent || lastEvent.type === AttendanceType.OUT) {
-      type = AttendanceType.IN;
-    } else {
-      type = AttendanceType.OUT;
+    if (user.branchId.toString() !== branchId) {
+      throw new BadRequestException('Wrong branch');
     }
 
-    // 6️⃣ التأكد أن الجهاز من نفس الفرع
-    if (user.branchId.toString() !== device.branchId.toString()) {
-      throw new BadRequestException('Wrong branch device');
-    }
-
-    // 7️⃣ حفظ الحدث
     await this.attendanceModel.create({
       userId,
-      branchId: user.branchId,
-      deviceId: device._id,
+      branchId,
       type,
       scannedAt: now,
     });

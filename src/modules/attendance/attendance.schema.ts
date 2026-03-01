@@ -14,9 +14,6 @@ export class AttendanceEvent {
   @Prop({ type: Types.ObjectId, ref: 'Branch', required: true })
   branchId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Device', required: true })
-  deviceId: Types.ObjectId;
-
   @Prop({ required: true, enum: AttendanceType })
   type: AttendanceType;
 

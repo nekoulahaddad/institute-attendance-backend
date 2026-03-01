@@ -24,6 +24,9 @@ export class Branch {
 
   @Prop()
   phone: string;
+
+  @Prop({ default: false })
+  canChangeBranch: boolean;
 }
 
 export const BranchSchema = SchemaFactory.createForClass(Branch);
