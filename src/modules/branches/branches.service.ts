@@ -19,6 +19,11 @@ export class BranchesService {
     return created.toObject();
   }
 
+  async createMany(items: Partial<Branch>[]) {
+    const created = await this.branchModel.insertMany(items);
+    return created.map((item) => item.toObject());
+  }
+
   async update(id: string, data: Partial<Branch>) {
     const updated = await this.branchModel
       .findByIdAndUpdate(id, data, { new: true })

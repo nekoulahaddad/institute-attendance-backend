@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { BranchesService } from './branches.service';
 import { Branch } from './branches.schema';
 
@@ -14,6 +22,11 @@ export class BranchesController {
   @Post()
   async create(@Body() body: Partial<Branch>) {
     return this.branchesService.create(body);
+  }
+
+  @Post('bulk')
+  async createMany(@Body() body: Partial<Branch>[]) {
+    return this.branchesService.createMany(body);
   }
 
   @Patch(':id')
