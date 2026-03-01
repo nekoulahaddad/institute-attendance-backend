@@ -6,6 +6,15 @@ import { ScanDto } from 'src/modules/devices/scan.dto';
 import { User, UserStatus } from 'src/modules/users/user.schema';
 import { AttendanceEvent, AttendanceType } from './attendance.schema';
 
+function timeConverter(UNIX_timestamp: any) {
+  const a = new Date(UNIX_timestamp * 1000);
+  const hour = a.getHours();
+  const min = a.getMinutes();
+  const sec = a.getSeconds();
+  const time = hour + ':' + min + ':' + sec;
+  return time;
+}
+
 @Injectable()
 export class AttendanceService {
   constructor(
@@ -18,20 +27,18 @@ export class AttendanceService {
 
   async handleScan(scanDto: ScanDto, branchId: string) {
     const { userId, ts } = scanDto;
-    console.log(
-      `Handling scan for user ${userId} at branch ${branchId} with timestamp ${ts}`,
-    );
+    console.log(timeConverter(ts), timeConverter(Date.now() / 1000));
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new BadRequestException('User not found');
+      throw new BadRequestException('المستخدم غير موجود');
     }
 
     if (user.status !== UserStatus.APPROVED) {
-      throw new BadRequestException('User not approved');
+      throw new BadRequestException('المستخدم غير معتمد');
     }
 
     if (!this.qrService.isTimestampValid(ts)) {
-      throw new BadRequestException('QR expired');
+      throw new BadRequestException('رمز QR منتهي الصلاحية');
     }
 
     const lastEvent = await this.attendanceModel
@@ -43,7 +50,7 @@ export class AttendanceService {
     if (lastEvent) {
       const diff = now.getTime() - new Date(lastEvent.scannedAt).getTime();
       if (diff < 5000) {
-        throw new BadRequestException('Scan too fast');
+        throw new BadRequestException('تم المسح بسرعة كبيرة');
       }
     }
 
@@ -53,7 +60,7 @@ export class AttendanceService {
         : AttendanceType.OUT;
 
     if (user.branchId.toString() !== branchId) {
-      throw new BadRequestException('Wrong branch');
+      throw new BadRequestException('الفرع غير صحيح');
     }
 
     await this.attendanceModel.create({
