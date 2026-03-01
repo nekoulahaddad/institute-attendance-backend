@@ -50,7 +50,7 @@ export class RegistrationService {
     if (!user) throw new BadRequestException('User not found');
 
     // const previousData = user.toObject();
-
+    dto.status = UserStatus.PENDING;
     Object.assign(user, dto);
     const updatedUser = await user.save();
 
