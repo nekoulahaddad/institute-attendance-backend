@@ -1,8 +1,17 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { UserRole } from '../users/user.schema';
 
 @Controller('reports')
 export class ReportsController {
@@ -33,6 +42,56 @@ export class ReportsController {
   ) {
     return this.reportsService.getMonthlyDuration(
       userId,
+      Number(year),
+      Number(month),
+    );
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'super_admin')
+  @Get('branch/monthly/:branchId')
+  async branchMonthlySessions(
+    @Req() req,
+    @Param('branchId') branchId: string,
+    @Query('year') year: string,
+    @Query('month') month: string,
+  ) {
+    if (
+      req.user.role === UserRole.ADMIN &&
+      req.user.branchId.toString() !== branchId
+    ) {
+      throw new ForbiddenException(
+        'Admins can only access reports for their branch',
+      );
+    }
+
+    return this.reportsService.getMonthlySessionsForBranch(
+      branchId,
+      Number(year),
+      Number(month),
+    );
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'super_admin')
+  @Get('branch/monthly-duration/:branchId')
+  async branchMonthlyDuration(
+    @Req() req,
+    @Param('branchId') branchId: string,
+    @Query('year') year: string,
+    @Query('month') month: string,
+  ) {
+    if (
+      req.user.role === UserRole.ADMIN &&
+      req.user.branchId.toString() !== branchId
+    ) {
+      throw new ForbiddenException(
+        'Admins can only access reports for their branch',
+      );
+    }
+
+    return this.reportsService.getBranchMonthlyDuration(
+      branchId,
       Number(year),
       Number(month),
     );

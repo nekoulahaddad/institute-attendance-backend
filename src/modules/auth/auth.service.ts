@@ -19,8 +19,10 @@ export class AuthService {
     private whatsappService: WhatsAppService,
   ) {}
 
-  async validateAdmin(email: string, password: string) {
-    const user = await this.userModel.findOne({ englishName: email });
+  async validateAdmin(phone: string, password: string) {
+    const hashedCode = await bcrypt.hash(password, 10);
+    console.log(`Generated hash for password: ${hashedCode}`);
+    const user = await this.userModel.findOne({ phone });
 
     if (!user) throw new UnauthorizedException();
 

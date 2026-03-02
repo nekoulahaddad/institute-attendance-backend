@@ -34,6 +34,8 @@ export class RegistrationController {
     return this.registrationService.approveUser(req.user._id, id);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'super_admin')
   @Post(':id/reject')
   async reject(@Param('id') id: string, @Req() req) {
     return this.registrationService.rejectUser(req.user._id, id);
