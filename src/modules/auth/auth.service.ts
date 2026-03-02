@@ -20,6 +20,9 @@ export class AuthService {
   ) {}
 
   async validateAdmin(phone: string, password: string) {
+    console.log(
+      `Attempting to validate admin with phone: ${phone} and password: ${password}`,
+    );
     const hashedCode = await bcrypt.hash(password, 10);
     console.log(`Generated hash for password: ${hashedCode}`);
     const user = await this.userModel.findOne({ phone });
@@ -94,5 +97,44 @@ export class AuthService {
     await user.save();
 
     return { user };
+  }
+
+  async createAdminUser(body: {
+    phone: string;
+    password: string;
+    role?: UserRole;
+    branchId: string;
+    englishName?: string;
+    arabicName?: string;
+  }) {
+    const { phone, password, branchId } = body;
+    const role = body.role || UserRole.ADMIN;
+
+    if (role !== UserRole.ADMIN && role !== UserRole.SUPER_ADMIN) {
+      throw new BadRequestException('Role must be admin or super_admin');
+    }
+
+    const existing = await this.userModel.findOne({ phone });
+    if (existing) {
+      throw new BadRequestException('Phone is already in use');
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = await this.userModel.create({
+      phone,
+      passwordHash,
+      role,
+      status: 'approved',
+      branchId,
+      englishName: body.englishName || phone,
+      arabicName: body.arabicName || phone,
+      languages: [],
+    });
+
+    return {
+      message: 'Admin created successfully',
+      user,
+    };
   }
 }
