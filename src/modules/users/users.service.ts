@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User, UserRole, UserStatus } from './user.schema';
@@ -35,6 +39,7 @@ export class UsersService {
     search?: string;
   }) {
     const query: Record<string, any> = {};
+    const andClauses: Record<string, any>[] = [];
 
     if (filters.status) query.status = filters.status;
     if (filters.role) query.role = filters.role;
@@ -43,19 +48,27 @@ export class UsersService {
         throw new BadRequestException('Invalid branch id');
       }
 
-      query.$or = [
-        { branchId: filters.branchId },
-        { branchId: new Types.ObjectId(filters.branchId) },
-      ];
+      andClauses.push({
+        $or: [
+          { branchId: filters.branchId },
+          { branchId: new Types.ObjectId(filters.branchId) },
+        ],
+      });
     }
 
     if (filters.search) {
       const searchRegex = new RegExp(filters.search, 'i');
-      query.$or = [
-        { arabicName: searchRegex },
-        { englishName: searchRegex },
-        { phone: searchRegex },
-      ];
+      andClauses.push({
+        $or: [
+          { arabicName: searchRegex },
+          { englishName: searchRegex },
+          { phone: searchRegex },
+        ],
+      });
+    }
+
+    if (andClauses.length > 0) {
+      query.$and = andClauses;
     }
 
     const users = await this.userModel
@@ -91,6 +104,27 @@ export class UsersService {
   async updateStatus(id: string, status: UserStatus) {
     const updated = await this.userModel
       .findByIdAndUpdate(id, { status }, { new: true })
+      .populate('branchId')
+      .lean();
+
+    if (!updated) {
+      throw new NotFoundException('User not found');
+    }
+
+    return updated;
+  }
+
+  async updateAdminMessage(id: string, adminMessage?: string | null) {
+    const normalizedMessage = adminMessage?.trim() || null;
+
+    const updated = await this.userModel
+      .findByIdAndUpdate(
+        id,
+        {
+          adminMessage: normalizedMessage,
+        },
+        { new: true },
+      )
       .populate('branchId')
       .lean();
 

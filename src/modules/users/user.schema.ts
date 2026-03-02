@@ -62,6 +62,9 @@ export class User {
 
   @Prop()
   passwordHash?: string;
+
+  @Prop({ type: String, default: null })
+  adminMessage?: string | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

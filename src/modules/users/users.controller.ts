@@ -95,4 +95,25 @@ export class UsersController {
 
     return this.usersService.updateStatus(id, status);
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'super_admin')
+  @Patch(':id/admin-message')
+  async updateAdminMessage(
+    @Req() req,
+    @Param('id') id: string,
+    @Body('adminMessage') adminMessage?: string,
+  ) {
+    const currentUser = req.user;
+    const existingUser = await this.usersService.findById(id);
+
+    if (
+      currentUser.role === UserRole.ADMIN &&
+      currentUser.branchId.toString() !== existingUser.branchId.toString()
+    ) {
+      throw new ForbiddenException('Admins can only update their branch users');
+    }
+
+    return this.usersService.updateAdminMessage(id, adminMessage);
+  }
 }
