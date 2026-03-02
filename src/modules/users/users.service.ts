@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User, UserRole, UserStatus } from './user.schema';
@@ -38,8 +38,15 @@ export class UsersService {
 
     if (filters.status) query.status = filters.status;
     if (filters.role) query.role = filters.role;
-    if (filters.branchId && Types.ObjectId.isValid(filters.branchId)) {
-      query.branchId = new Types.ObjectId(filters.branchId);
+    if (filters.branchId) {
+      if (!Types.ObjectId.isValid(filters.branchId)) {
+        throw new BadRequestException('Invalid branch id');
+      }
+
+      query.$or = [
+        { branchId: filters.branchId },
+        { branchId: new Types.ObjectId(filters.branchId) },
+      ];
     }
 
     if (filters.search) {
@@ -51,11 +58,25 @@ export class UsersService {
       ];
     }
 
-    return this.userModel
+    const users = await this.userModel
       .find(query)
       .sort({ createdAt: -1 })
       .populate('branchId')
       .lean();
+
+    if (!filters.branchId) {
+      return users;
+    }
+
+    // Extra safety: enforce exact branch match after populate for legacy data shapes.
+    return users.filter((user: any) => {
+      const branchValue = user?.branchId;
+      const normalizedBranchId =
+        typeof branchValue === 'string'
+          ? branchValue
+          : branchValue?._id?.toString?.() || branchValue?.toString?.();
+      return normalizedBranchId === filters.branchId;
+    });
   }
 
   async create(data: Partial<User>) {

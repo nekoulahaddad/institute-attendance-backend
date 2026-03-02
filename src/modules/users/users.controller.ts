@@ -19,6 +19,15 @@ import { UserRole, UserStatus } from './user.schema';
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  private normalizeBranchId(branchId?: string): string | undefined {
+    if (!branchId) return undefined;
+    const normalized = branchId.trim();
+    if (!normalized || normalized === 'all' || normalized === '*') {
+      return undefined;
+    }
+    return normalized;
+  }
+
   @Get('find-by-phone/:phone')
   async findByPhone(@Param('phone') phone: string) {
     return this.usersService.findByPhone({ phone });
@@ -35,10 +44,11 @@ export class UsersController {
     @Query('search') search?: string,
   ) {
     const currentUser = req.user;
+    const normalizedBranchId = this.normalizeBranchId(branchId);
     const effectiveBranchId =
       currentUser.role === UserRole.ADMIN
         ? currentUser.branchId.toString()
-        : branchId;
+        : normalizedBranchId;
 
     return this.usersService.listUsers({
       status,
