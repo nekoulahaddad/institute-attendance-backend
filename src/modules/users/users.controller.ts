@@ -28,6 +28,15 @@ export class UsersController {
     return normalized;
   }
 
+  private normalizeFilterValue(value?: string): string | undefined {
+    if (!value) return undefined;
+    const normalized = value.trim();
+    if (!normalized || normalized === 'all' || normalized === '*') {
+      return undefined;
+    }
+    return normalized;
+  }
+
   @Get('find-by-phone/:phone')
   async findByPhone(@Param('phone') phone: string) {
     return this.usersService.findByPhone({ phone });
@@ -41,10 +50,14 @@ export class UsersController {
     @Query('status') status?: UserStatus,
     @Query('branchId') branchId?: string,
     @Query('role') role?: UserRole,
+    @Query('language') language?: string,
+    @Query('level') level?: string,
     @Query('search') search?: string,
   ) {
     const currentUser = req.user;
     const normalizedBranchId = this.normalizeBranchId(branchId);
+    const normalizedLanguage = this.normalizeFilterValue(language);
+    const normalizedLevel = this.normalizeFilterValue(level);
     const effectiveBranchId =
       currentUser.role === UserRole.ADMIN
         ? currentUser.branchId.toString()
@@ -54,6 +67,8 @@ export class UsersController {
       status,
       branchId: effectiveBranchId,
       role,
+      language: normalizedLanguage,
+      level: normalizedLevel,
       search,
     });
   }

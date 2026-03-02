@@ -36,6 +36,8 @@ export class UsersService {
     status?: UserStatus;
     branchId?: string;
     role?: UserRole;
+    language?: string;
+    level?: string;
     search?: string;
   }) {
     const query: Record<string, any> = {};
@@ -64,6 +66,24 @@ export class UsersService {
           { englishName: searchRegex },
           { phone: searchRegex },
         ],
+      });
+    }
+
+    if (filters.language || filters.level) {
+      const languageElemMatch: Record<string, any> = {};
+
+      if (filters.language) {
+        languageElemMatch.language = new RegExp(`^${filters.language}$`, 'i');
+      }
+
+      if (filters.level) {
+        languageElemMatch.level = new RegExp(`^${filters.level}$`, 'i');
+      }
+
+      andClauses.push({
+        languages: {
+          $elemMatch: languageElemMatch,
+        },
       });
     }
 
