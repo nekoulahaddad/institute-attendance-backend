@@ -250,7 +250,6 @@ export class ReportsService {
     );
 
     const rows = await this.attendanceModel.aggregate(pipeline as any);
-    console.log(rows);
     const grouped: {
       teachers: any[];
       students: any[];
