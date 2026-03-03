@@ -5,12 +5,15 @@ import {
   AttendanceEvent,
   AttendanceType,
 } from '../attendance/attendance.schema';
+import { User, UserRole, UserStatus } from '../users/user.schema';
 
 @Injectable()
 export class ReportsService {
   constructor(
     @InjectModel(AttendanceEvent.name)
     private attendanceModel: Model<AttendanceEvent>,
+    @InjectModel(User.name)
+    private userModel: Model<User>,
   ) {}
 
   async getMonthlySessions(userId: string, year: number, month: number) {
@@ -182,5 +185,79 @@ export class ReportsService {
     }
 
     return result;
+  }
+
+  async getActiveUsersByRole(branchId?: string) {
+    const matchStage: Record<string, any> = {};
+    if (branchId) {
+      matchStage.branchId = branchId;
+    }
+
+    const pipeline: any[] = [];
+
+    if (Object.keys(matchStage).length > 0) {
+      pipeline.push({ $match: matchStage });
+    }
+
+    pipeline.push(
+      { $sort: { scannedAt: -1 } },
+      {
+        $group: {
+          _id: '$userId',
+          latestType: { $first: '$type' },
+          lastScannedAt: { $first: '$scannedAt' },
+          latestBranchId: { $first: '$branchId' },
+        },
+      },
+      { $match: { latestType: AttendanceType.IN } },
+      // {
+      //   $lookup: {
+      //     from: this.userModel.collection.name,
+      //     localField: '_id',
+      //     foreignField: '_id',
+      //     as: 'user',
+      //   },
+      // },
+      // { $unwind: '$user' },
+      // {
+      //   $match: {
+      //     'user.status': UserStatus.APPROVED,
+      //     'user.role': {
+      //       $in: [UserRole.TEACHER, UserRole.STUDENT, UserRole.EMPLOYEE],
+      //     },
+      //   },
+      // },
+    );
+
+    const rows = await this.attendanceModel.aggregate(pipeline as any);
+    console.log(rows);
+    const grouped: {
+      teachers: any[];
+      students: any[];
+      employees: any[];
+    } = {
+      teachers: [],
+      students: [],
+      employees: [],
+    };
+
+    rows.forEach((row) => {
+      const item = {
+        _id: row.user._id.toString(),
+        arabicName: row.user.arabicName,
+        englishName: row.user.englishName,
+        phone: row.user.phone,
+        role: row.user.role,
+        branchId:
+          row.latestBranchId?.toString?.() || row.user.branchId?.toString?.(),
+        lastScannedAt: row.lastScannedAt,
+      };
+
+      if (row.user.role === UserRole.TEACHER) grouped.teachers.push(item);
+      if (row.user.role === UserRole.STUDENT) grouped.students.push(item);
+      if (row.user.role === UserRole.EMPLOYEE) grouped.employees.push(item);
+    });
+
+    return grouped;
   }
 }

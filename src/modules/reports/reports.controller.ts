@@ -96,4 +96,26 @@ export class ReportsController {
       Number(month),
     );
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'super_admin')
+  @Get('active-now')
+  async activeNow(@Req() req, @Query('branchId') branchId?: string) {
+    const effectiveBranchId =
+      req.user.role === UserRole.ADMIN
+        ? req.user.branchId.toString()
+        : branchId;
+
+    if (
+      req.user.role === UserRole.ADMIN &&
+      branchId &&
+      branchId !== req.user.branchId.toString()
+    ) {
+      throw new ForbiddenException(
+        'Admins can only access reports for their branch',
+      );
+    }
+
+    return this.reportsService.getActiveUsersByRole(effectiveBranchId);
+  }
 }
