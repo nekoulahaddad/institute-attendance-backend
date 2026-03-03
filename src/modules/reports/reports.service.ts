@@ -210,23 +210,23 @@ export class ReportsService {
         },
       },
       { $match: { latestType: AttendanceType.IN } },
-      // {
-      //   $lookup: {
-      //     from: this.userModel.collection.name,
-      //     localField: '_id',
-      //     foreignField: '_id',
-      //     as: 'user',
-      //   },
-      // },
-      // { $unwind: '$user' },
-      // {
-      //   $match: {
-      //     'user.status': UserStatus.APPROVED,
-      //     'user.role': {
-      //       $in: [UserRole.TEACHER, UserRole.STUDENT, UserRole.EMPLOYEE],
-      //     },
-      //   },
-      // },
+      {
+        $lookup: {
+          from: this.userModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      { $unwind: '$user' },
+      {
+        $match: {
+          'user.status': UserStatus.APPROVED,
+          'user.role': {
+            $in: [UserRole.TEACHER, UserRole.STUDENT, UserRole.EMPLOYEE],
+          },
+        },
+      },
     );
 
     const rows = await this.attendanceModel.aggregate(pipeline as any);
