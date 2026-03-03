@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import {
   AttendanceEvent,
   AttendanceType,
@@ -190,7 +190,14 @@ export class ReportsService {
   async getActiveUsersByRole(branchId?: string) {
     const matchStage: Record<string, any> = {};
     if (branchId) {
-      matchStage.branchId = branchId;
+      if (Types.ObjectId.isValid(branchId)) {
+        matchStage.$or = [
+          { branchId },
+          { branchId: new Types.ObjectId(branchId) },
+        ];
+      } else {
+        matchStage.branchId = branchId;
+      }
     }
 
     const pipeline: any[] = [];
@@ -211,9 +218,22 @@ export class ReportsService {
       },
       { $match: { latestType: AttendanceType.IN } },
       {
+        $addFields: {
+          userObjectId: {
+            $convert: {
+              input: '$_id',
+              to: 'objectId',
+              onError: null,
+              onNull: null,
+            },
+          },
+        },
+      },
+      { $match: { userObjectId: { $ne: null } } },
+      {
         $lookup: {
           from: this.userModel.collection.name,
-          localField: '_id',
+          localField: 'userObjectId',
           foreignField: '_id',
           as: 'user',
         },
